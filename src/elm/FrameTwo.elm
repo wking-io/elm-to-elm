@@ -2,7 +2,7 @@ module FrameTwo exposing (main)
 
 import Browser
 import Html exposing (Html)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
 import Result
@@ -33,12 +33,12 @@ view : Model -> Html Msg
 view model =
     case model of
         Solo modelMsg ->
-            Html.div []
+            Html.div [ id "frameTwo" ]
                 [ Html.h1 [] [ Html.text ("FrameTwo Solo: " ++ modelMsg) ]
                 ]
 
         Duo modelMsg ->
-            Html.div []
+            Html.div [ id "frameTwo" ]
                 [ Html.h1 [] [ Html.text ("FrameTwo Duo: " ++ modelMsg) ]
                 ]
 

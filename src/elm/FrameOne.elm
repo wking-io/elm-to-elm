@@ -1,10 +1,11 @@
-module FrameOne exposing (main)
+port module FrameOne exposing (main)
 
 import Browser
 import Html exposing (Html)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
+import Json.Encode as Encode
 import Result
 
 
@@ -19,28 +20,34 @@ init flags =
 
 
 type Msg
-    = Default
+    = Ping
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Default ->
-            ( model, Cmd.none )
+        Ping ->
+            ( model, outbox (Encode.object [ ( "type", Encode.string "start" ) ]) )
 
 
 view : Model -> Html Msg
 view model =
     case model of
         Solo modelMsg ->
-            Html.div []
+            Html.div [ id "frameOne" ]
                 [ Html.h1 [] [ Html.text ("FrameOne Solo: " ++ modelMsg) ]
                 ]
 
         Duo modelMsg ->
-            Html.div []
+            Html.div [ id "frameOne" ]
                 [ Html.h1 [] [ Html.text ("FrameOne Duo: " ++ modelMsg) ]
                 ]
+
+
+port outbox : Value -> Cmd msg
+
+
+port inbox : (Value -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg

@@ -2,9 +2,17 @@ import '../css/base.css';
 import '../css/frameTwo.css';
 import { Elm } from '../elm/FrameTwo.elm';
 
-Elm.FrameTwo.init({
-  node: document.getElementById('frameTwo'),
+import { createMailbox } from './mailbox';
+
+const frame = document.getElementById('frameTwo');
+const mailbox = createMailbox('frameTwo');
+
+const app = Elm.FrameOne.init({
+  node: frame,
   flags: {
     test: 'test',
   },
 });
+
+mailbox.subscribe(app.ports.inbox.send);
+app.ports.outbox.subscribe(mailbox.send);
