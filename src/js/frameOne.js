@@ -4,15 +4,15 @@ import { Elm } from '../elm/FrameOne.elm';
 
 import { createMailbox } from './mailbox';
 
-const frame = document.getElementById('frameOne');
-const mailbox = createMailbox('frameOne');
+const key = 'frameOne';
 
 const app = Elm.FrameOne.init({
-  node: frame,
+  node: document.getElementById(key),
   flags: {
-    test: 'test',
+    key,
   },
 });
 
+const mailbox = createMailbox(key);
 mailbox.subscribe(app.ports.inbox.send);
 app.ports.outbox.subscribe(mailbox.send);
