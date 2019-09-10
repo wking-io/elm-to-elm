@@ -1,43 +1,42 @@
 {
   "name": "elm-to-elm",
   "private": true,
-  "description":
-    "Project testing out communication between two or more elm apps on a page",
-  "scripts": {
-    "develop":
-      "webpack --mode=development --watch --config=config/webpack.config.js",
-    "build": "webpack --mode=production --config=config/webpack.config.js"
+  "dependencies": {
+    "@reach/visually-hidden": "0.1.4",
+    "email-validator": "2.0.4",
+    "gatsby": "2.13.31",
+    "gatsby-image": "2.2.7",
+    "gatsby-plugin-google-tagmanager": "2.1.8",
+    "gatsby-plugin-manifest": "^2.1.1",
+    "gatsby-plugin-offline": "^2.1.3",
+    "gatsby-plugin-postcss": "2.1.0",
+    "gatsby-plugin-react-helmet": "^3.0.12",
+    "gatsby-plugin-sharp": "2.2.9",
+    "gatsby-source-filesystem": "^2.0.43",
+    "gatsby-transformer-json": "2.2.2",
+    "gatsby-transformer-remark": "2.6.7",
+    "gatsby-transformer-sharp": "2.2.5",
+    "prop-types": "^15.7.2",
+    "react": "^16.8.6",
+    "react-collapse": "4.0.3",
+    "react-dom": "^16.8.6",
+    "react-helmet": "^5.2.1",
+    "react-motion": "0.5.2"
   },
   "devDependencies": {
-    "@babel/cli": "7.5.5",
-    "@babel/core": "7.5.5",
-    "@babel/preset-env": "7.5.5",
-    "ajv": "6.9.1",
-    "autoprefixer": "8.5.0",
-    "babel-eslint": "10.0.2",
-    "babel-loader": "8.0.6",
-    "browserslist": "3.2.7",
-    "css-loader": "2.1.1",
-    "cssnano": "4.1.10",
-    "elm": "0.19.0-no-deps",
-    "elm-live": "4.0.0-alpha.13",
-    "elm-webpack-loader": "6.0.0",
-    "eslint": "4.19.1",
-    "eslint-config-prettier": "2.9.0",
-    "eslint-loader": "2.0.0",
-    "eslint-plugin-import": "2.18.2",
-    "file-loader": "1.1.11",
-    "image-webpack-loader": "4.6.0",
-    "mini-css-extract-plugin": "0.5.0",
-    "node-sass": "4.11.0",
-    "postcss-flexbugs-fixes": "3.3.1",
-    "postcss-loader": "2.1.5",
-    "prettier": "1.12.1",
-    "prettier-eslint-cli": "4.7.1",
-    "stylelint": "9.10.1",
-    "stylelint-webpack-plugin": "0.10.5",
-    "tailwindcss": "1.1.2",
-    "webpack": "4.8.3",
-    "webpack-cli": "3.3.7"
+    "prettier": "^1.18.2",
+    "tailwindcss": "1.0.4"
+  },
+  "keywords": [
+    "gatsby"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "format": "prettier --write src/**/*.{js,jsx}",
+    "start": "npm run develop",
+    "serve": "gatsby serve",
+    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\""
   }
 }
