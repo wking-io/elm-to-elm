@@ -38,6 +38,7 @@ module.exports = {
       },
     },
     'gatsby-plugin-postcss',
+    'gatsby-plugin-elm',
     'gatsby-plugin-offline',
   ],
 };

@@ -1,4 +1,4 @@
-port module FrameTwo exposing (main)
+port module CountTwo exposing (main)
 
 import Browser
 import Html exposing (Html)
@@ -105,12 +105,12 @@ view : Model -> Html Msg
 view model =
     case model of
         Solo ->
-            Html.div [ id "frameTwo", class "text-center w-1/2 p-16" ]
+            Html.div [ id "count-two", class "text-center w-1/2 p-16" ]
                 [ Html.h1 [] [ Html.text "Elm App Two: Waiting for friend" ]
                 ]
 
         Duo key count ->
-            Html.div [ id "frameTwo", class "text-center w-1/2 p-16" ]
+            Html.div [ id "count-two", class "text-center w-1/2 p-16" ]
                 [ Html.h1 [ class "text-2xl font-bold mb-4" ] [ Html.text ("Elm App Two: " ++ String.fromInt count) ]
                 , Html.button [ class "px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium shadow hover:shadow-md rounded", onClick (SendMail (Encode.object [ ( "type", Encode.string "increase" ) ])) ] [ Html.text "Add one to other Elm app" ]
                 ]
