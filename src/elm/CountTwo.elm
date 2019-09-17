@@ -17,7 +17,7 @@ type Model
 
 init : Value -> ( Model, Cmd Msg )
 init flags =
-    ( Solo, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "start" ) ])) |> Task.perform identity )
+    ( Solo, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "count-start" ) ])) |> Task.perform identity )
 
 
 type Msg
@@ -61,23 +61,27 @@ handleMail model mail =
                 Duo k x ->
                     ( Duo k (x + 1), Cmd.none )
 
+        NotMine _ ->
+            ( model, Cmd.none )
+
 
 type Mail
     = Connect String
     | Increase
+    | NotMine String
 
 
 parseMail : String -> Decoder Mail
 parseMail mailType =
     case mailType of
-        "start" ->
+        "count-start" ->
             connectDecoder
 
         "increase" ->
             increaseDecoder
 
         _ ->
-            Decode.fail ("Invalid mail type: " ++ mailType)
+            notMineDecoder mailType
 
 
 connectDecoder : Decoder Mail
@@ -93,6 +97,11 @@ keyDecoder =
 increaseDecoder : Decoder Mail
 increaseDecoder =
     Decode.succeed Increase
+
+
+notMineDecoder : String -> Decoder Mail
+notMineDecoder unknownType =
+    Decode.succeed (NotMine unknownType)
 
 
 mailDecoder : Decoder Mail

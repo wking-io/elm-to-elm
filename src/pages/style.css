@@ -1,5 +1,9 @@
 @tailwind base;
 
+body {
+  @apply font-sans text-black;
+}
+
 .link {
   @apply underline font-medium;
 }
