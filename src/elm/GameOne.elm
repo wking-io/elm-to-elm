@@ -9,19 +9,20 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
 import Player exposing (Player, Position)
 import Result
-import Room exposing (Room)
+import Room exposing (Doors, Room, RoomPosition)
+import Set exposing (Set)
 import Svg
 import Task
 
 
 type Model
     = Solo Position
-    | Multiple Player (List Room)
+    | Multiple Player Doors
 
 
 init : Value -> ( Model, Cmd Msg )
 init flags =
-    ( Solo Player.start, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "gameStart" ) ])) |> Task.perform identity )
+    ( Solo Player.center, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "gameStart" ) ])) |> Task.perform identity )
 
 
 type Msg
@@ -125,18 +126,28 @@ readMail value =
 handleMail : Model -> Mail -> ( Model, Cmd Msg )
 handleMail model mail =
     case mail of
-        Connect _ ->
-            ( model, Cmd.none )
+        Connect room roomPosition ->
+            case model of
+                Solo position ->
+                    ( Multiple (Player.from position) (Room.only room), Cmd.none )
 
-        NewPlayer _ ->
-            ( model, Cmd.none )
+                Multiple player doors ->
+                    ( Multiple player (Room.updateDoors roomPosition room doors), Cmd.none )
+
+        NewPlayer player ->
+            case model of
+                Solo _ ->
+                    ( model, Cmd.none )
+
+                Multiple oldPlayer doors ->
+                    ( Multiple player doors, Cmd.none )
 
         NotMine _ ->
             ( model, Cmd.none )
 
 
 type Mail
-    = Connect String
+    = Connect Room RoomPosition
     | NewPlayer Player
     | NotMine String
 
@@ -145,13 +156,27 @@ parseMail : String -> Decoder Mail
 parseMail mailType =
     case mailType of
         "gameStart" ->
-            Decode.map Connect keyDecoder
+            Decode.andThen getNeighbor keyDecoder
+                |> Decode.map2 Connect Room.decoder
 
         "playerTransfer" ->
-            Decode.map NewPlayer Player.decoder
+            Decode.map NewPlayer (Decode.field "details" Player.decoder)
 
         _ ->
             Decode.succeed (NotMine mailType)
+
+
+getNeighbor : String -> Decoder RoomPosition
+getNeighbor roomId =
+    case roomId of
+        "game-two" ->
+            Decode.succeed Room.RoomRight
+
+        "game-three" ->
+            Decode.succeed Room.RoomBottom
+
+        _ ->
+            Decode.fail "Not my neighbor"
 
 
 keyDecoder : Decoder String
@@ -172,9 +197,9 @@ view model =
             Html.div [ id "game-one" ]
                 [ Player.render position |> Room.render ]
 
-        Multiple _ _ ->
-            Html.div [ id "count-one" ]
-                []
+        Multiple player _ ->
+            Html.div [ id "game-one" ]
+                [ Player.maybeRender player |> Room.render ]
 
 
 port outbox : Value -> Cmd msg

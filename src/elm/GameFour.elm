@@ -1,6 +1,5 @@
 port module GameFour exposing (main)
 
-import Board exposing (BoardList, Player, Position)
 import Browser
 import Browser.Events exposing (onKeyDown)
 import Html exposing (Html)
@@ -8,19 +7,22 @@ import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
+import Player exposing (Player, Position)
 import Result
+import Room exposing (Doors, Room, RoomPosition)
+import Set exposing (Set)
 import Svg
 import Task
 
 
 type Model
     = Solo Position
-    | Multiple Player BoardList
+    | Multiple Player Doors
 
 
 init : Value -> ( Model, Cmd Msg )
 init flags =
-    ( Solo Board.startingPosition, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "game-start" ) ])) |> Task.perform identity )
+    ( Solo Player.center, Task.succeed (SendMail (Encode.object [ ( "type", Encode.string "gameStart" ) ])) |> Task.perform identity )
 
 
 type Msg
@@ -83,7 +85,7 @@ update msg model =
         Left ->
             case model of
                 Solo position ->
-                    ( Solo (Board.moveLeft position), Cmd.none )
+                    ( Solo (Player.moveLeft position), Cmd.none )
 
                 Multiple _ _ ->
                     ( model, Cmd.none )
@@ -91,7 +93,7 @@ update msg model =
         Right ->
             case model of
                 Solo position ->
-                    ( Solo (Board.moveRight position), Cmd.none )
+                    ( Solo (Player.moveRight position), Cmd.none )
 
                 Multiple _ _ ->
                     ( model, Cmd.none )
@@ -99,7 +101,7 @@ update msg model =
         Up ->
             case model of
                 Solo position ->
-                    ( Solo (Board.moveUp position), Cmd.none )
+                    ( Solo (Player.moveUp position), Cmd.none )
 
                 Multiple _ _ ->
                     ( model, Cmd.none )
@@ -107,7 +109,7 @@ update msg model =
         Down ->
             case model of
                 Solo position ->
-                    ( Solo (Board.moveDown position), Cmd.none )
+                    ( Solo (Player.moveDown position), Cmd.none )
 
                 Multiple _ _ ->
                     ( model, Cmd.none )
@@ -124,41 +126,62 @@ readMail value =
 handleMail : Model -> Mail -> ( Model, Cmd Msg )
 handleMail model mail =
     case mail of
-        Connect _ ->
-            ( model, Cmd.none )
+        Connect room roomPosition ->
+            case model of
+                Solo position ->
+                    ( Multiple Player.there (Room.only room), Cmd.none )
+
+                Multiple player doors ->
+                    ( Multiple player (Room.updateDoors roomPosition room doors), Cmd.none )
+
+        NewPlayer player ->
+            case model of
+                Solo _ ->
+                    ( model, Cmd.none )
+
+                Multiple oldPlayer doors ->
+                    ( Multiple player doors, Cmd.none )
 
         NotMine _ ->
             ( model, Cmd.none )
 
 
 type Mail
-    = Connect String
+    = Connect Room RoomPosition
+    | NewPlayer Player
     | NotMine String
 
 
 parseMail : String -> Decoder Mail
 parseMail mailType =
     case mailType of
-        "count-start" ->
-            connectDecoder
+        "gameStart" ->
+            Decode.andThen getNeighbor keyDecoder
+                |> Decode.map2 Connect Room.decoder
+
+        "playerTransfer" ->
+            Decode.map NewPlayer (Decode.field "details" Player.decoder)
 
         _ ->
-            notMineDecoder mailType
+            Decode.succeed (NotMine mailType)
 
 
-connectDecoder : Decoder Mail
-connectDecoder =
-    Decode.map Connect keyDecoder
+getNeighbor : String -> Decoder RoomPosition
+getNeighbor roomId =
+    case roomId of
+        "game-two" ->
+            Decode.succeed Room.RoomTop
+
+        "game-three" ->
+            Decode.succeed Room.RoomLeft
+
+        _ ->
+            Decode.fail "Not my neighbor"
 
 
 keyDecoder : Decoder String
 keyDecoder =
     Decode.field "key" Decode.string
-
-
-notMineDecoder : String -> Decoder Mail
-notMineDecoder unknownType =
-    Decode.succeed (NotMine unknownType)
 
 
 mailDecoder : Decoder Mail
@@ -172,11 +195,11 @@ view model =
     case model of
         Solo position ->
             Html.div [ id "game-four" ]
-                [ Board.render position ]
+                [ Player.render position |> Room.render ]
 
-        Multiple _ _ ->
+        Multiple player _ ->
             Html.div [ id "game-four" ]
-                []
+                [ Player.maybeRender player |> Room.render ]
 
 
 port outbox : Value -> Cmd msg

@@ -58,7 +58,7 @@ const GameExample = () => (
         </Link>
       </p>
       <div className="flex flex-col md:flex-row items-center justify-center w-full">
-        <div className="flex flex-wrap justify-center items-center">
+        <div className="flex flex-wrap justify-center items-center max-w-xl">
           <div className="mb-8 mr-4">
             <ElmMailbox src={gameBoardOne.Elm.GameOne} mailboxId="game-one" />
           </div>

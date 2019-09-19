@@ -1,4 +1,4 @@
-module Player exposing (Player, Position, decoder, moveDown, moveLeft, moveRight, moveUp, render, start)
+module Player exposing (Player, Position, center, decoder, from, maybeRender, moveDown, moveLeft, moveRight, moveUp, render, start, there)
 
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -11,6 +11,11 @@ import Tuple
 type Player
     = Here Position
     | There
+
+
+there : Player
+there =
+    There
 
 
 type Position
@@ -161,6 +166,16 @@ render position =
         []
 
 
+maybeRender : Player -> Html msg
+maybeRender player =
+    case player of
+        There ->
+            Svg.text ""
+
+        Here position ->
+            render position
+
+
 getPosition : Position -> List (Attribute msg)
 getPosition position =
     case position of
@@ -192,9 +207,19 @@ getPosition position =
             [ x "180", y "180" ]
 
 
-start : Position
-start =
+center : Position
+center =
     CenterCenter
+
+
+start : Player
+start =
+    Here center
+
+
+from : Position -> Player
+from position =
+    Here position
 
 
 decoder : Decoder Player
