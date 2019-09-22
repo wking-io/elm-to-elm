@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
-import Player exposing (Player, Position)
+import Player exposing (Direction, Player, Position)
 import Result
 import Room exposing (Doors, Room, RoomPosition)
 import Set exposing (Set)
@@ -28,47 +28,8 @@ init flags =
 type Msg
     = SendMail Value
     | YouHaveMail Value
-    | Left
-    | Right
-    | Up
-    | Down
-    | OtherKeyPressed
-
-
-keypressDecoder : Decode.Decoder Msg
-keypressDecoder =
-    Decode.map toDirection (Decode.field "keyCode" Decode.int)
-
-
-toDirection : Int -> Msg
-toDirection int =
-    case int of
-        65 ->
-            Left
-
-        37 ->
-            Left
-
-        68 ->
-            Right
-
-        39 ->
-            Right
-
-        83 ->
-            Down
-
-        40 ->
-            Down
-
-        87 ->
-            Up
-
-        38 ->
-            Up
-
-        _ ->
-            OtherKeyPressed
+    | PlayerMoved Direction Position
+    | PlayerMovedOut Direction Position
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,40 +43,21 @@ update msg model =
                 |> Result.map (handleMail model)
                 |> Result.withDefault ( model, Cmd.none )
 
-        Left ->
+        PlayerMoved direction position ->
             case model of
-                Solo position ->
-                    ( Solo (Player.moveLeft position), Cmd.none )
+                Solo _ ->
+                    ( Solo (Player.move direction position), Cmd.none )
 
-                Multiple _ _ ->
-                    ( model, Cmd.none )
+                Multiple player doors ->
+                    ( Multiple (Player.update direction position player) doors, Cmd.none )
 
-        Right ->
+        PlayerMovedOut direction position ->
             case model of
-                Solo position ->
-                    ( Solo (Player.moveRight position), Cmd.none )
+                Solo _ ->
+                    ( Solo (Player.move direction position), Cmd.none )
 
-                Multiple _ _ ->
-                    ( model, Cmd.none )
-
-        Up ->
-            case model of
-                Solo position ->
-                    ( Solo (Player.moveUp position), Cmd.none )
-
-                Multiple _ _ ->
-                    ( model, Cmd.none )
-
-        Down ->
-            case model of
-                Solo position ->
-                    ( Solo (Player.moveDown position), Cmd.none )
-
-                Multiple _ _ ->
-                    ( model, Cmd.none )
-
-        OtherKeyPressed ->
-            ( model, Cmd.none )
+                Multiple _ doors ->
+                    ( Multiple Player.there doors, Player.encode direction position |> outbox )
 
 
 readMail : Value -> Result Decode.Error Mail
@@ -212,8 +154,18 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ inbox YouHaveMail
-        , onKeyDown keypressDecoder
+        , onKeyDown (processKeydown model)
         ]
+
+
+processKeydown : Model -> Decoder Msg
+processKeydown model =
+    case model of
+        Solo position ->
+            Decode.map2 PlayerMoved Player.directionDecoder (Decode.succeed position)
+
+        Multiple player _ ->
+            Decode.andThen (Player.process { stayMsg = PlayerMoved, leaveMsg = PlayerMovedOut } player) Player.directionDecoder
 
 
 main : Program Value Model Msg
