@@ -9,7 +9,7 @@ import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
 import Player exposing (Direction, Player, Position)
 import Result
-import Room exposing (Doors, Room, RoomPosition)
+import Room exposing (Doors, Room, RoomPosition, Source)
 import Set exposing (Set)
 import Svg
 import Task
@@ -30,6 +30,11 @@ type Msg
     | YouHaveMail Value
     | PlayerMoved Direction Position
     | PlayerMovedOut Direction Position
+
+
+withNone : Model -> ( Model, Cmd Msg )
+withNone model =
+    ( model, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -76,22 +81,30 @@ handleMail model mail =
                 Multiple player doors ->
                     ( Multiple player (Room.updateDoors roomPosition room doors), Cmd.none )
 
-        NewPlayer player ->
+        NewPlayer player source ->
             case model of
                 Solo _ ->
                     ( model, Cmd.none )
 
                 Multiple oldPlayer doors ->
-                    ( Multiple player doors, Cmd.none )
+                    Room.validate source doors
+                        |> pickPlayer oldPlayer player
+                        |> (\p -> Multiple p doors)
+                        |> withNone
 
-        NotMine _ ->
-            ( model, Cmd.none )
+
+pickPlayer : Player -> Player -> Bool -> Player
+pickPlayer old new bool =
+    if bool then
+        new
+
+    else
+        old
 
 
 type Mail
     = Connect Room RoomPosition
-    | NewPlayer Player
-    | NotMine String
+    | NewPlayer Player Source
 
 
 parseMail : String -> Decoder Mail
@@ -99,13 +112,13 @@ parseMail mailType =
     case mailType of
         "gameStart" ->
             Decode.andThen getNeighbor keyDecoder
-                |> Decode.map2 Connect Room.decoder
+                |> Decode.map2 Connect Room.roomDecoder
 
         "playerTransfer" ->
-            Decode.map NewPlayer (Decode.field "details" Player.decoder)
+            Decode.map2 NewPlayer Player.decoder Room.decoder
 
         _ ->
-            Decode.succeed (NotMine mailType)
+            Decode.fail "Not recognized Mail type."
 
 
 getNeighbor : String -> Decoder RoomPosition

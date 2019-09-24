@@ -454,6 +454,7 @@ positionToString position =
 encode : Direction -> Position -> Value
 encode direction position =
     Encode.object
-        [ ( "direction", Encode.string (directionToString direction) )
+        [ ( "type", Encode.string "playerTransfer" )
+        , ( "direction", Encode.string (directionToString direction) )
         , ( "position", Encode.string (positionToString position) )
         ]

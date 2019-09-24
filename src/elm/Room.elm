@@ -1,4 +1,4 @@
-module Room exposing (Doors, Room, RoomPosition(..), decoder, only, render, updateDoors)
+module Room exposing (Doors, Room, RoomPosition(..), Source, decoder, only, render, roomDecoder, updateDoors, validate)
 
 import Dict exposing (Dict)
 import Html exposing (Attribute, Html)
@@ -18,6 +18,25 @@ type RoomPosition
     | RoomBottom
 
 
+positionFromString : String -> Decoder RoomPosition
+positionFromString str =
+    case str of
+        "left" ->
+            Decode.succeed RoomLeft
+
+        "right" ->
+            Decode.succeed RoomRight
+
+        "up" ->
+            Decode.succeed RoomTop
+
+        "down" ->
+            Decode.succeed RoomBottom
+
+        _ ->
+            Decode.fail "Not a valid position"
+
+
 type Doors
     = One Room
     | Two DoorAssignments
@@ -31,6 +50,53 @@ type alias DoorAssignments =
     , bottom : Room
     , left : Room
     }
+
+
+type Source
+    = Source Room RoomPosition
+
+
+validate : Source -> Doors -> Bool
+validate (Source room roomDirection) doors =
+    getDoorFromDirection roomDirection doors
+        |> equals room
+
+
+getDoorFromDirection : RoomPosition -> Doors -> Room
+getDoorFromDirection roomPosition doors =
+    case doors of
+        One room ->
+            room
+
+        Two assignments ->
+            assignments |> directionToGetter roomPosition
+
+        Three assignments ->
+            assignments |> directionToGetter roomPosition
+
+        Four assignments ->
+            assignments |> directionToGetter roomPosition
+
+
+directionToGetter : RoomPosition -> (DoorAssignments -> Room)
+directionToGetter roomPosition =
+    case roomPosition of
+        RoomRight ->
+            .right
+
+        RoomLeft ->
+            .left
+
+        RoomTop ->
+            .top
+
+        RoomBottom ->
+            .bottom
+
+
+equals : Room -> Room -> Bool
+equals (Room x) (Room y) =
+    x == y
 
 
 only : Room -> Doors
@@ -166,6 +232,16 @@ render player =
         ]
 
 
-decoder : Decoder Room
+decoder : Decoder Source
 decoder =
+    Decode.map2 Source roomDecoder positionDecoder
+
+
+roomDecoder : Decoder Room
+roomDecoder =
     Decode.map Room (Decode.field "key" Decode.string)
+
+
+positionDecoder : Decoder RoomPosition
+positionDecoder =
+    Decode.andThen positionFromString (Decode.field "direction" Decode.string)
