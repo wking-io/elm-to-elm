@@ -86,7 +86,7 @@ const GameExample = () => (
 const IndexPage = () => (
   <Layout>
     <SEO />
-    <div className="flex justify-center items-center py-24">
+    <div className="flex justify-center items-center py-24 px-16">
       <div className="h-32">
         <LogoIcon />
       </div>
