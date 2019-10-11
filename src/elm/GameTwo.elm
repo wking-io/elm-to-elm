@@ -47,7 +47,6 @@ update msg model =
             readMail mail
                 |> Result.map (handleMail model)
                 |> Result.withDefault ( model, Cmd.none )
-                |> Debug.log "Well"
 
         PlayerMoved direction position ->
             case model of
@@ -56,7 +55,6 @@ update msg model =
 
                 Multiple player doors ->
                     ( Multiple (Player.update direction position player) doors, Cmd.none )
-                        |> Debug.log "Well also"
 
         PlayerMovedOut direction position ->
             case model of
